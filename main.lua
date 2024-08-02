@@ -1,4 +1,3 @@
--- main.lua
 function love.load()
     love.window.setTitle("Tic-Tac-Toe")
     love.window.setMode(600, 600)
@@ -9,14 +8,27 @@ function love.load()
         {'', '', ''},
         {'', '', ''}
     }
-    gameState = "playing" -- can be "playing", "won", "draw"
+    gameState = "playing"
     winner = nil
+    winPatterns = {
+        {{1, 1}, {1, 2}, {1, 3}},
+        {{2, 1}, {2, 2}, {2, 3}},
+        {{3, 1}, {3, 2}, {3, 3}},
+        {{1, 1}, {2, 1}, {3, 1}},
+        {{1, 2}, {2, 2}, {3, 2}},
+        {{1, 3}, {2, 3}, {3, 3}},
+        {{1, 1}, {2, 2}, {3, 3}},
+        {{1, 3}, {2, 2}, {3, 1}}
+    }
 end
 
 function love.draw()
     drawBoard()
     drawMarks()
     if gameState == "won" then
+        love.graphics.setColor(0, 1, 0)
+        drawWinningLine()
+        love.graphics.setColor(1, 1, 1)
         love.graphics.printf(winner .. " wins!", 0, 550, 600, 'center')
     elseif gameState == "draw" then
         love.graphics.printf("It's a draw!", 0, 550, 600, 'center')
@@ -58,6 +70,22 @@ function drawO(x, y)
     love.graphics.circle("line", cx, cy, radius)
 end
 
+function drawWinningLine()
+    local startX, startY, endX, endY
+    for _, pattern in ipairs(winPatterns) do
+        if board[pattern[1][1]][pattern[1][2]] == winner and
+           board[pattern[2][1]][pattern[2][2]] == winner and
+           board[pattern[3][1]][pattern[3][2]] == winner then
+            startX = (pattern[1][2] - 1) * cellSize + cellSize / 2
+            startY = (pattern[1][1] - 1) * cellSize + cellSize / 2
+            endX = (pattern[3][2] - 1) * cellSize + cellSize / 2
+            endY = (pattern[3][1] - 1) * cellSize + cellSize / 2
+            love.graphics.line(startX, startY, endX, endY)
+            break
+        end
+    end
+end
+
 function love.mousepressed(x, y, button, istouch, presses)
     if button == 1 and gameState == "playing" then
         local gridX = math.ceil(x / cellSize)
@@ -79,19 +107,12 @@ function love.mousepressed(x, y, button, istouch, presses)
 end
 
 function checkWin(player)
-    for i = 1, 3 do
-        if board[i][1] == player and board[i][2] == player and board[i][3] == player then
+    for _, pattern in ipairs(winPatterns) do
+        if board[pattern[1][1]][pattern[1][2]] == player and
+           board[pattern[2][1]][pattern[2][2]] == player and
+           board[pattern[3][1]][pattern[3][2]] == player then
             return true
         end
-        if board[1][i] == player and board[2][i] == player and board[3][i] == player then
-            return true
-        end
-    end
-    if board[1][1] == player and board[2][2] == player and board[3][3] == player then
-        return true
-    end
-    if board[1][3] == player and board[2][2] == player and board[3][1] == player then
-        return true
     end
     return false
 end
